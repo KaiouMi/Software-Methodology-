@@ -28,7 +28,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import song.Songs;
@@ -37,7 +36,8 @@ import javafx.fxml.*;
 public class Controller {
 
 	@FXML
-	private Button applyButton, addbutton, deletebutton, editbutton, addCancel, editCancel, addingButton;
+	private Button addbutton, deletebutton, editbutton, addCancel, editCancel, addingButton;
+
 	@FXML
 	TextField enteredname, enteredartist, enteredalbum, enteredyear, songDetailName, detailArtist, detailAlbum, detailYear;
 
@@ -59,6 +59,8 @@ public class Controller {
 		enteredartist.setVisible(true);
 		enteredalbum.setVisible(true);
 		enteredyear.setVisible(true);
+		editbutton.setDisable(true);
+		deletebutton.setDisable(true);
 
 		addCancel.setVisible(true);
 		addbutton.setVisible(false);
@@ -106,17 +108,9 @@ public class Controller {
 					songList.setItems(list.sorted());
 					songList.getSelectionModel().select(addedsong);
 					songDetailName.setText(addedsong.getName());
-					songDetailName.setEditable(false);
 					detailArtist.setText(addedsong.getArtist());
-					detailArtist.setEditable(false);
-					detailArtist.setFocusTraversable(false);
-
 					detailAlbum.setText(addedsong.getAlbum());
-					detailAlbum.setEditable(false);
 					detailYear.setText(addedsong.getYear());
-					detailYear.setEditable(false);
-					
-					
 				}
 			}
 
@@ -132,6 +126,8 @@ public class Controller {
 			enteredyear.setVisible(false);
 			enteredyear.clear();
 			addCancel.setVisible(false);
+			editbutton.setDisable(false);
+			deletebutton.setDisable(false);
 		}
 
 	}
@@ -148,7 +144,7 @@ public class Controller {
 		}
 	}
 
-	public void addCancelled() {
+	public void addCancelled() { //cancel button in add pressed
 
 		enteredname.setVisible(false);
 		enteredname.clear();
@@ -162,6 +158,8 @@ public class Controller {
 		addCancel.setVisible(false);
 		addbutton.setVisible(true);
 		addingButton.setVisible(false);
+		editbutton.setDisable(false);
+		deletebutton.setDisable(false);
 	}
 
 	public Boolean inList(String songname, String artist) {
@@ -191,7 +189,63 @@ public class Controller {
 	}
 
 	public void deletePressed() {
-		deletebutton.setOnAction(new EventHandler<ActionEvent>() {
+		if(songList.getItems().isEmpty()) {
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Error");
+			alert.setContentText("You cannot delete from an empty list!");
+			alert.showAndWait();
+		} else {
+			Songs deleteSong = songList.getSelectionModel().getSelectedItem();
+			int deleteIndex = songList.getSelectionModel().getSelectedIndex();
+			
+			method = "delete";
+			if(confirm(method)) {
+				//user wants to delete song
+				
+				list.remove(deleteSong);
+				
+				if (list.isEmpty()) {
+					songDetailName.clear();;
+					detailArtist.clear();
+					detailAlbum.clear();
+					detailYear.clear();
+					return;
+					
+				} else if(list.size() == deleteIndex) {
+					songList.getSelectionModel().select(deleteIndex - 1);
+				
+				} else {
+					songList.getSelectionModel().select(deleteIndex + 1);
+					
+				}
+
+				songList.setItems(list.sorted());
+				Songs newSong = songList.getSelectionModel().getSelectedItem();
+				songDetailName.setText(newSong.getName());
+				detailArtist.setText(newSong.getArtist());
+				detailAlbum.setText(newSong.getAlbum());
+				detailYear.setText(newSong.getYear());
+				
+			}
+			
+			
+		}
+		
+	}
+	
+	public void listClicked() {
+		Songs newSong = songList.getSelectionModel().getSelectedItem();
+		songDetailName.setText(newSong.getName());
+		detailArtist.setText(newSong.getArtist());
+		detailAlbum.setText(newSong.getAlbum());
+		detailYear.setText(newSong.getYear());
+	}
+
+	public void editPressed() {
+
+		songDetailName.setEditable(true); // this will have to be set false at the end of the edit method!!
+
+		editbutton.setOnAction(new EventHandler<ActionEvent>() {
 			public void handle(ActionEvent event) {
 				if (songList.getItems().isEmpty()) {
 					return;
@@ -199,83 +253,6 @@ public class Controller {
 
 			}
 		});
+
 	}
-
-	public void editPressed() {
-
-		songDetailName.setEditable(true); // this will have to be set false at the end of the edit method!!
-	
-		detailArtist.setEditable(true);
-
-		detailAlbum.setEditable(true);
-		detailYear.setEditable(true);
-		
-		 
-		
-		if (songList.getItems().isEmpty()) {
-			return;
-		}
-		
-				editbutton.setVisible(false);
-				editCancel.setVisible(true);
-				//editbutton.setText("Apply changes");
-				applyButton.setVisible(true);
-			
-		
-	}
-	public void applyPressed() {
-		
-		
-		songDetailName.setEditable(false); //this will have to be set false at the end of the edit method!!
-		
-		detailArtist.setEditable(false);
-
-		detailAlbum.setEditable(false);
-		detailYear.setEditable(false);
-		
-		editCancel.setVisible(false);
-		editbutton.setVisible(true);
-		applyButton.setVisible(false);
-		 
-	
-		
-		Songs selected = songList.getSelectionModel().getSelectedItem();
-		
-		
-		selected.setName(songDetailName.getText()); 
-		selected.setArtist(detailArtist.getText()); 
-		selected.setAlbum(detailAlbum.getText());
-		selected.setYear(detailYear.getText()); 
-		
-		list.add(selected);
-		
-	}
-		
-	
-
-//		
-//		applyButton.setOnAction(new EventHandler<ActionEvent>() {
-//			public void handle(ActionEvent event) {
-//				editCancel.setVisible(false);
-//				editbutton.setVisible(true);
-//				applyButton.setVisible(false);
-//				 
-//				
-////				if (songList.getItems().isEmpty()) {
-////					return;
-////				}
-//				
-//				Songs selected = songList.getSelectionModel().getSelectedItem();
-//				
-//				selected.setName(songDetailName.getText()); 
-//				selected.setArtist(detailArtist.getText()); 
-//				selected.setAlbum(detailAlbum.getText());
-//				selected.setYear(detailYear.getText()); 
-//
-//			}
-//		});
-		
-		
-
-	
 }
